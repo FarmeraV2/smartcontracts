@@ -7,38 +7,49 @@ import {TrustPackage} from "./interfaces/TrustPackage.sol";
 
 contract TrustComputation {
     error TrustComputation__NoTrustPackage();
+    error TrustComputation__IdAlreadyProcessed();
+    error TrustComputation__InvalidData();
 
     struct TrustRecord {
-        uint trustScore;
-        uint timestamp;
+        uint256 trustScore;
+        uint256 timestamp;
     }
 
     MetricSelection private s_metricSelection;
-    mapping(uint64 logId => TrustRecord) public trustRecords;
+    mapping(uint64 logId => TrustRecord) private s_trustRecords;
 
-    event TrustProcessed(uint64 logId, uint trustScore);
+    event TrustProcessed(uint64 indexed logId, uint256 trustScore);
 
     constructor(address metricSelectionAddress) {
         s_metricSelection = MetricSelection(metricSelectionAddress);
     }
 
-    function processData(
-        uint64 logId,
-        string memory dataType,
-        string memory context,
-        bytes calldata data
-    ) external {
-        address trustPackageAddress = s_metricSelection.getTrustPackage(
-            dataType,
-            context
-        );
+    function processData(uint64 logId, string memory dataType, string memory context, bytes calldata data) external {
+        address trustPackageAddress = s_metricSelection.getTrustPackage(dataType, context);
         if (trustPackageAddress == address(0)) {
             revert TrustComputation__NoTrustPackage();
         }
-        uint score = TrustPackage(trustPackageAddress).computeTrustScore(data);
-        trustRecords[logId] = TrustRecord({
-            trustScore: score,
-            timestamp: block.timestamp
-        });
+
+        if (s_trustRecords[logId].timestamp != 0) {
+            revert TrustComputation__IdAlreadyProcessed();
+        }
+
+        if (data.length == 0) {
+            revert TrustComputation__InvalidData();
+        }
+
+        uint256 score = TrustPackage(trustPackageAddress).computeTrustScore(data);
+        s_trustRecords[logId] = TrustRecord({trustScore: score, timestamp: block.timestamp});
+
+        emit TrustProcessed(logId, score);
+    }
+
+    function getTrustRecord(uint64 logId) external view returns (uint256 trustScore, uint256 timestamp) {
+        TrustRecord memory record = s_trustRecords[logId];
+        return (record.trustScore, record.timestamp);
+    }
+
+    function getMetricSelection() external view returns (MetricSelection) {
+        return s_metricSelection;
     }
 }

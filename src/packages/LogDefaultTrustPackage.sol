@@ -28,9 +28,7 @@ contract LogDefaultTrustPackage is TrustPackage {
         Location plotLocation;
     }
 
-    function computeTrustScore(
-        bytes calldata payload
-    ) external pure returns (uint256) {
+    function computeTrustScore(bytes calldata payload) external pure returns (uint256) {
         LogData memory logData = abi.decode(payload, (LogData));
 
         // provenance
@@ -47,10 +45,8 @@ contract LogDefaultTrustPackage is TrustPackage {
 
         // evidence completeness
         uint256 Tec = _min(
-            (MAX_IMAGE_COUNT *
-                logData.imageCount +
-                MAX_VIDEO_COUNT *
-                logData.videoCount) / (MAX_IMAGE_COUNT + MAX_VIDEO_COUNT),
+            (MAX_IMAGE_COUNT * logData.imageCount + MAX_VIDEO_COUNT * logData.videoCount)
+                / (MAX_IMAGE_COUNT + MAX_VIDEO_COUNT),
             1
         ) * SCALE;
 
@@ -58,18 +54,11 @@ contract LogDefaultTrustPackage is TrustPackage {
         uint256 Tsc = logData.isCompliant ? SCALE : 0;
 
         return
-            (WEIGHT_SPATIAL_PLAUSIBILITY *
-                Tsp +
-                WEIGHT_EVIDENCE_COMPLETENESS *
-                Tec +
-                WEIGHT_STEP_COMPLIANCE *
-                Tsc) / SCALE;
+            (WEIGHT_SPATIAL_PLAUSIBILITY * Tsp + WEIGHT_EVIDENCE_COMPLETENESS * Tec + WEIGHT_STEP_COMPLIANCE * Tsc)
+                / SCALE;
     }
 
-    function _distance(
-        Location memory a,
-        Location memory b
-    ) internal pure returns (uint256) {
+    function _distance(Location memory a, Location memory b) internal pure returns (uint256) {
         int256 latDiff = a.latitude - b.latitude;
         int256 lngDiff = a.longitude - b.longitude;
         return uint256(latDiff * latDiff + lngDiff * lngDiff);

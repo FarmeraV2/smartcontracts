@@ -3,7 +3,5 @@
 pragma solidity ^0.8.30;
 
 interface TrustPackage {
-    function computeTrustScore(
-        bytes calldata payload
-    ) external pure returns (uint256);
+    function computeTrustScore(bytes calldata payload) external view returns (uint256);
 }
