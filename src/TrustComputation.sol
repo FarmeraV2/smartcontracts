@@ -44,9 +44,20 @@ contract TrustComputation {
         emit TrustProcessed(logId, score);
     }
 
-    function getTrustRecord(uint64 logId) external view returns (uint256 trustScore, uint256 timestamp) {
+    function getTrustRecord(uint64 logId) external view returns (uint64, uint256 trustScore, uint256 timestamp) {
         TrustRecord memory record = s_trustRecords[logId];
-        return (record.trustScore, record.timestamp);
+        return (logId, record.trustScore, record.timestamp);
+    }
+
+    function getTrustRecords(uint64[] memory logIds) external view returns (uint256[] memory, uint256[] memory) {
+        uint256[] memory trustScore = new uint256[](logIds.length);
+        uint256[] memory timestamp = new uint256[](logIds.length);
+        uint32 i = 0;
+        for (; i < logIds.length; i++) {
+            trustScore[i] = s_trustRecords[logIds[i]].trustScore;
+            timestamp[i] = s_trustRecords[logIds[i]].timestamp;
+        }
+        return (trustScore, timestamp);
     }
 
     function getMetricSelection() external view returns (MetricSelection) {

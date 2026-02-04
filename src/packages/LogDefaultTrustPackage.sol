@@ -10,9 +10,10 @@ contract LogDefaultTrustPackage is TrustPackage {
     uint256 constant MAX_VIDEO_COUNT = 1;
 
     uint256 constant SCALE = 100;
+    uint256 constant WEIGHT_PROVENANCE = 50;
     uint256 constant WEIGHT_SPATIAL_PLAUSIBILITY = 30;
-    uint256 constant WEIGHT_EVIDENCE_COMPLETENESS = 50;
-    uint256 constant WEIGHT_STEP_COMPLIANCE = 20;
+    uint256 constant WEIGHT_EVIDENCE_COMPLETENESS = 20;
+    // uint256 constant WEIGHT_STEP_COMPLIANCE = 20;
 
     struct Location {
         int256 latitude; // lat * 1e6
@@ -20,7 +21,6 @@ contract LogDefaultTrustPackage is TrustPackage {
     }
 
     struct LogData {
-        bool isCompliant;
         bool verified;
         uint256 imageCount;
         uint256 videoCount;
@@ -32,8 +32,9 @@ contract LogDefaultTrustPackage is TrustPackage {
         LogData memory logData = abi.decode(payload, (LogData));
 
         // provenance
-        if (!logData.verified) {
-            return 0;
+        uint256 Tp = 0;
+        if (logData.verified) {
+            Tp = 1 * SCALE;
         }
 
         // spatial plausibility
@@ -51,11 +52,9 @@ contract LogDefaultTrustPackage is TrustPackage {
         ) * SCALE;
 
         // step compliance
-        uint256 Tsc = logData.isCompliant ? SCALE : 0;
+        // uint256 Tsc = logData.isCompliant ? SCALE : 0;
 
-        return
-            (WEIGHT_SPATIAL_PLAUSIBILITY * Tsp + WEIGHT_EVIDENCE_COMPLETENESS * Tec + WEIGHT_STEP_COMPLIANCE * Tsc)
-                / SCALE;
+        return (WEIGHT_SPATIAL_PLAUSIBILITY * Tsp + WEIGHT_EVIDENCE_COMPLETENESS * Tec + WEIGHT_PROVENANCE * Tp) / SCALE;
     }
 
     function _distance(Location memory a, Location memory b) internal pure returns (uint256) {
