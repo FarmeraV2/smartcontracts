@@ -5,11 +5,6 @@
 - [Architecture](#architecture)
 - [Smart Contracts](#smart-contracts)
 - [Trust Scoring Algorithm](#trust-scoring-algorithm)
-- [Data Flow](#data-flow)
-- [Deployment](#deployment)
-- [Testing](#testing)
-- [Development Workflow](#development-workflow)
-- [Technical Specifications](#technical-specifications)
 
 ## Project Overview
 
