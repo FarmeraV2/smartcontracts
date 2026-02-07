@@ -9,6 +9,7 @@
 ## Project Overview
 
 The Farmera Trustworthiness Smart Contract is designed to compute and store trustworthiness scores for agricultural farm logs. The system evaluates the credibility of farm activity records by analyzing multiple dimensions including data provenance, spatial plausibility, and evidence completeness.
+This trust evaluation approach is based on the data-item–level trust model proposed in the [JBBA paper](https://jbba.scholasticahq.com/article/94100-improving-the-trustworthiness-of-traceability-data-in-food-supply-chain-using-blockchain-and-trust-model)
 
 ### Key Features
 
