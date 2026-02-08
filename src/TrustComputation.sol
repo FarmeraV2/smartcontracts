@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: MIT
-
 pragma solidity >=0.8.30;
 
 import {MetricSelection} from "./MetricSelection.sol";
@@ -11,26 +10,40 @@ contract TrustComputation {
     error TrustComputation__InvalidData();
 
     struct TrustRecord {
-        uint256 trustScore;
+        uint128 trustScore;
         uint256 timestamp;
     }
 
     MetricSelection private s_metricSelection;
-    mapping(uint64 logId => TrustRecord) private s_trustRecords;
 
-    event TrustProcessed(uint64 indexed logId, uint256 trustScore);
+    mapping(bytes32 => mapping(uint64 => TrustRecord)) private s_trustRecords;
+
+    event TrustProcessed(
+        bytes32 indexed identifier,
+        uint64 indexed id,
+        uint128 trustScore
+    );
 
     constructor(address metricSelectionAddress) {
         s_metricSelection = MetricSelection(metricSelectionAddress);
     }
 
-    function processData(uint64 logId, string memory dataType, string memory context, bytes calldata data) external {
-        address trustPackageAddress = s_metricSelection.getTrustPackage(dataType, context);
+    function processData(
+        bytes32 identifier,
+        uint64 id,
+        string memory dataType,
+        string memory context,
+        bytes calldata data
+    ) external {
+        address trustPackageAddress = s_metricSelection.getTrustPackage(
+            dataType,
+            context
+        );
         if (trustPackageAddress == address(0)) {
             revert TrustComputation__NoTrustPackage();
         }
 
-        if (s_trustRecords[logId].timestamp != 0) {
+        if (s_trustRecords[identifier][id].timestamp != 0) {
             revert TrustComputation__IdAlreadyProcessed();
         }
 
@@ -38,26 +51,50 @@ contract TrustComputation {
             revert TrustComputation__InvalidData();
         }
 
-        uint256 score = TrustPackage(trustPackageAddress).computeTrustScore(data);
-        s_trustRecords[logId] = TrustRecord({trustScore: score, timestamp: block.timestamp});
+        uint128 score = TrustPackage(trustPackageAddress).computeTrustScore(
+            data
+        );
 
-        emit TrustProcessed(logId, score);
+        s_trustRecords[identifier][id] = TrustRecord({
+            trustScore: score,
+            timestamp: block.timestamp
+        });
+
+        emit TrustProcessed(identifier, id, score);
     }
 
-    function getTrustRecord(uint64 logId) external view returns (uint64, uint256 trustScore, uint256 timestamp) {
-        TrustRecord memory record = s_trustRecords[logId];
-        return (logId, record.trustScore, record.timestamp);
+    function getTrustRecord(
+        bytes32 identifier,
+        uint64 id
+    )
+        external
+        view
+        returns (bytes32, uint64, uint128 trustScore, uint256 timestamp)
+    {
+        TrustRecord memory record = s_trustRecords[identifier][id];
+        return (identifier, id, record.trustScore, record.timestamp);
     }
 
-    function getTrustRecords(uint64[] memory logIds) external view returns (uint256[] memory, uint256[] memory) {
-        uint256[] memory trustScore = new uint256[](logIds.length);
-        uint256[] memory timestamp = new uint256[](logIds.length);
-        uint32 i = 0;
-        for (; i < logIds.length; i++) {
-            trustScore[i] = s_trustRecords[logIds[i]].trustScore;
-            timestamp[i] = s_trustRecords[logIds[i]].timestamp;
+    function getTrustRecords(
+        bytes32 identifier,
+        uint64[] calldata ids
+    )
+        external
+        view
+        returns (uint128[] memory trustScores, uint256[] memory timestamps)
+    {
+        uint256 length = ids.length;
+        trustScores = new uint128[](length);
+        timestamps = new uint256[](length);
+        uint256 i = 0;
+
+        for (i; i < length; i++) {
+            TrustRecord memory record = s_trustRecords[identifier][ids[i]];
+            trustScores[i] = record.trustScore;
+            timestamps[i] = record.timestamp;
         }
-        return (trustScore, timestamp);
+
+        return (trustScores, timestamps);
     }
 
     function getMetricSelection() external view returns (MetricSelection) {
