@@ -10,7 +10,8 @@ contract LogDefaultTrustPackage is TrustPackage {
     uint128 constant MAX_VIDEO_COUNT = 1;
 
     uint128 constant SCALE = 100;
-    uint128 constant WEIGHT_PROVENANCE = 50;
+    uint128 constant WEIGHT_PROVENANCE = 20;
+    uint128 constant WEIGHT_IMAGE_PROVENANCE = 30;
     uint128 constant WEIGHT_SPATIAL_PLAUSIBILITY = 30;
     uint128 constant WEIGHT_EVIDENCE_COMPLETENESS = 20;
     // uint128 constant WEIGHT_STEP_COMPLIANCE = 20;
@@ -22,21 +23,26 @@ contract LogDefaultTrustPackage is TrustPackage {
 
     struct LogData {
         bool verified;
+        bool imageVerified;
         uint128 imageCount;
         uint128 videoCount;
         Location logLocation;
         Location plotLocation;
     }
 
-    function computeTrustScore(
-        bytes calldata payload
-    ) external pure returns (uint128) {
+    function computeTrustScore(bytes calldata payload) external pure returns (uint128) {
         LogData memory logData = abi.decode(payload, (LogData));
 
         // provenance
         uint128 Tp = 0;
         if (logData.verified) {
             Tp = 1 * SCALE;
+        }
+
+        // image provenance
+        uint128 Tip = 0;
+        if (logData.imageVerified) {
+            Tip = 1 * SCALE;
         }
 
         // spatial plausibility
@@ -48,29 +54,25 @@ contract LogDefaultTrustPackage is TrustPackage {
 
         // evidence completeness
         uint128 Tec = _min(
-            (MAX_IMAGE_COUNT *
-                logData.imageCount +
-                MAX_VIDEO_COUNT *
-                logData.videoCount) / (MAX_IMAGE_COUNT + MAX_VIDEO_COUNT),
+            (MAX_IMAGE_COUNT * logData.imageCount + MAX_VIDEO_COUNT * logData.videoCount)
+                / (MAX_IMAGE_COUNT + MAX_VIDEO_COUNT),
             1
         ) * SCALE;
 
         // step compliance
         // uint128 Tsc = logData.isCompliant ? SCALE : 0;
 
-        return
-            (WEIGHT_SPATIAL_PLAUSIBILITY *
-                Tsp +
-                WEIGHT_EVIDENCE_COMPLETENESS *
-                Tec +
-                WEIGHT_PROVENANCE *
-                Tp) / SCALE;
+        return (WEIGHT_SPATIAL_PLAUSIBILITY
+                * Tsp
+                + WEIGHT_EVIDENCE_COMPLETENESS
+                * Tec
+                + WEIGHT_PROVENANCE
+                * Tp
+                + WEIGHT_IMAGE_PROVENANCE
+                * Tip) / SCALE;
     }
 
-    function _distance(
-        Location memory a,
-        Location memory b
-    ) internal pure returns (uint128) {
+    function _distance(Location memory a, Location memory b) internal pure returns (uint128) {
         int128 latDiff = a.latitude - b.latitude;
         int128 lngDiff = a.longitude - b.longitude;
         return uint128(latDiff * latDiff + lngDiff * lngDiff);

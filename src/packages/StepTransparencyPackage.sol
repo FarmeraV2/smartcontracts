@@ -17,9 +17,7 @@ contract StepTransparencyPackage is TrustPackage {
         uint128 minLogs;
     }
 
-    function computeTrustScore(
-        bytes calldata payload
-    ) external pure returns (uint128) {
+    function computeTrustScore(bytes calldata payload) external pure returns (uint128) {
         Data memory data = abi.decode(payload, (Data));
 
         // Log Coverage
@@ -32,15 +30,11 @@ contract StepTransparencyPackage is TrustPackage {
         if (data.invalidLogs == 0) {
             penaltyFactor = SCALE;
         } else {
-            uint128 invalidRatio = (data.invalidLogs * SCALE) /
-                (data.validLogs + data.invalidLogs);
+            uint128 invalidRatio = (data.invalidLogs * SCALE) / (data.validLogs + data.invalidLogs);
             penaltyFactor = SCALE - _min(invalidRatio * 3, SCALE);
         }
 
-        uint128 score = (Lc *
-            WEIGHT_LOG_COVERAGE +
-            Lar *
-            WEIGHT_ACTIVITY_RATIO) / 100;
+        uint128 score = (Lc * WEIGHT_LOG_COVERAGE + Lar * WEIGHT_ACTIVITY_RATIO) / 100;
 
         score = (score * penaltyFactor) / SCALE;
 
