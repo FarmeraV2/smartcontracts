@@ -6,7 +6,7 @@ import {TrustPackage} from "./interfaces/TrustPackage.sol";
 
 contract TrustComputation {
     error TrustComputation__NoTrustPackage();
-    error TrustComputation__IdAlreadyProcessed();
+    error TrustComputation__IdAlreadyProcessed(bytes32, uint64);
     error TrustComputation__InvalidData();
 
     struct TrustRecord {
@@ -37,7 +37,7 @@ contract TrustComputation {
         }
 
         if (s_trustRecords[identifier][id].timestamp != 0) {
-            revert TrustComputation__IdAlreadyProcessed();
+            revert TrustComputation__IdAlreadyProcessed(identifier, id);
         }
 
         if (data.length == 0) {
