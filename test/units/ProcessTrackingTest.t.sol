@@ -3,8 +3,8 @@
 pragma solidity >=0.8.30;
 
 import {Test} from "forge-std/Test.sol";
-import {ProcessTracking} from "../ProcessTracking.sol";
-import {DeployProcessTracking} from "../../../script/DeployProcessTracking.s.sol";
+import {ProcessTracking} from "../../src/process-tracking/ProcessTracking.sol";
+import {DeployProcessTracking} from "../../script/DeployProcessTracking.s.sol";
 
 contract ProcessTrackingTest is Test {
     ProcessTracking pt;

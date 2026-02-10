@@ -2,7 +2,7 @@
 pragma solidity ^0.8.30;
 
 import {Test} from "forge-std/Test.sol";
-import {LogDefaultTrustPackage} from "../../packages/LogDefaultTrustPackage.sol";
+import {LogDefaultTrustPackage} from "../../src/trustworthiness/packages/LogDefaultTrustPackage.sol";
 
 contract LogDefaultTrustPackageTest is Test {
     LogDefaultTrustPackage pkg;

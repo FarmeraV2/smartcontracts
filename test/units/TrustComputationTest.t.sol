@@ -2,8 +2,8 @@
 pragma solidity >=0.8.30;
 
 import {Test} from "forge-std/Test.sol";
-import {TrustComputation} from "../../TrustComputation.sol";
-import {MetricSelection} from "../../MetricSelection.sol";
+import {TrustComputation} from "../../src/trustworthiness/TrustComputation.sol";
+import {MetricSelection} from "../../src/trustworthiness/MetricSelection.sol";
 import {MockTrustPackage} from "../mocks/MockTrustPackage.sol";
 
 contract TrustComputationTest is Test {

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.30;
 
 import {Test} from "forge-std/Test.sol";
-import {MetricSelection} from "../../MetricSelection.sol";
+import {MetricSelection} from "../../src/trustworthiness/MetricSelection.sol";
 
 contract MetricSelectionTest is Test {
     MetricSelection metricSelection;

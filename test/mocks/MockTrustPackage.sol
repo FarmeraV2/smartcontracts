@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.30;
 
-import {TrustPackage} from "../../interfaces/TrustPackage.sol";
+import {TrustPackage} from "../../src/trustworthiness/interfaces/TrustPackage.sol";
 
 contract MockTrustPackage is TrustPackage {
     uint128 private s_score;
