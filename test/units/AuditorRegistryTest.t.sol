@@ -43,11 +43,7 @@ contract AuditorRegistryTest is Test {
         vm.prank(auditor1);
 
         vm.expectEmit(true, true, true, true);
-        emit AuditorRegistry.AuditorRegistered(
-            auditor1,
-            "Alice",
-            SUFFICIENT_STAKE
-        );
+        emit AuditorRegistry.AuditorRegistered(auditor1, "Alice", SUFFICIENT_STAKE);
 
         registry.registerAuditor{value: SUFFICIENT_STAKE}("Alice");
 
@@ -61,12 +57,7 @@ contract AuditorRegistryTest is Test {
 
     function testRegisterAuditorRevertsInsufficientStake() public {
         vm.prank(auditor1);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                AuditorRegistry.AuditorRegistry__InvalidAmount.selector,
-                auditor1
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(AuditorRegistry.AuditorRegistry__InvalidAmount.selector, auditor1));
         registry.registerAuditor{value: INSUFFICIENT_STAKE}("Alice");
     }
 
@@ -75,12 +66,7 @@ contract AuditorRegistryTest is Test {
         registry.registerAuditor{value: SUFFICIENT_STAKE}("Alice");
 
         vm.prank(auditor1);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                AuditorRegistry.AuditorRegistry__AlreadyRegistered.selector,
-                auditor1
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(AuditorRegistry.AuditorRegistry__AlreadyRegistered.selector, auditor1));
         registry.registerAuditor{value: SUFFICIENT_STAKE}("Alice2");
     }
 
@@ -90,19 +76,11 @@ contract AuditorRegistryTest is Test {
         vm.prank(auditor1);
 
         vm.expectEmit(true, true, true, true);
-        emit AuditorRegistry.VerificationSubmitted(
-            IDENTIFIER,
-            VERIFICATION_ID,
-            auditor1,
-            true
-        );
+        emit AuditorRegistry.VerificationSubmitted(IDENTIFIER, VERIFICATION_ID, auditor1, true);
 
         registry.verify(IDENTIFIER, VERIFICATION_ID, true);
 
-        AuditorRegistry.Verification[] memory v = registry.getVerifications(
-            IDENTIFIER,
-            VERIFICATION_ID
-        );
+        AuditorRegistry.Verification[] memory v = registry.getVerifications(IDENTIFIER, VERIFICATION_ID);
         assertEq(v.length, 1);
         assertEq(v[0].auditor, auditor1);
         assertTrue(v[0].isValid);
@@ -110,12 +88,7 @@ contract AuditorRegistryTest is Test {
 
     function testVerifyRevertsNotActiveAuditor() public {
         vm.prank(auditor1);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                AuditorRegistry.AuditorRegistry__InvalidAuditor.selector,
-                auditor1
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(AuditorRegistry.AuditorRegistry__InvalidAuditor.selector, auditor1));
         registry.verify(IDENTIFIER, VERIFICATION_ID, true);
     }
 
@@ -126,12 +99,7 @@ contract AuditorRegistryTest is Test {
         registry.verify(IDENTIFIER, VERIFICATION_ID, true);
 
         vm.prank(auditor1);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                AuditorRegistry.AuditorRegistry__AlreadyVerified.selector,
-                auditor1
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(AuditorRegistry.AuditorRegistry__AlreadyVerified.selector, auditor1));
         registry.verify(IDENTIFIER, VERIFICATION_ID, false);
     }
 
@@ -145,11 +113,7 @@ contract AuditorRegistryTest is Test {
         vm.prank(auditor2);
 
         vm.expectEmit(true, true, true, true);
-        emit AuditorRegistry.VerificationFinalized(
-            IDENTIFIER,
-            VERIFICATION_ID,
-            true
-        );
+        emit AuditorRegistry.VerificationFinalized(IDENTIFIER, VERIFICATION_ID, true);
 
         registry.verify(IDENTIFIER, VERIFICATION_ID, true);
 
@@ -254,10 +218,7 @@ contract AuditorRegistryTest is Test {
     }
 
     function testGetVerificationsReturnsEmptyByDefault() public view {
-        AuditorRegistry.Verification[] memory v = registry.getVerifications(
-            IDENTIFIER,
-            VERIFICATION_ID
-        );
+        AuditorRegistry.Verification[] memory v = registry.getVerifications(IDENTIFIER, VERIFICATION_ID);
         assertEq(v.length, 0);
     }
 

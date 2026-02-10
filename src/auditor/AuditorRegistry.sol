@@ -2,9 +2,7 @@
 
 pragma solidity >=0.8.30;
 
-import {
-    AggregatorV3Interface
-} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
+import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 import {PriceFeedConsumer} from "./PriceFeedConsumer.sol";
 
 contract AuditorRegistry {
@@ -15,22 +13,9 @@ contract AuditorRegistry {
     error AuditorRegistry__AlreadyRegistered(address);
     error AuditorRegistry__AlreadyVerified(address);
 
-    event AuditorRegistered(
-        address indexed auditor,
-        string name,
-        uint256 stakedTokens
-    );
-    event VerificationSubmitted(
-        bytes32 indexed identifier,
-        uint64 indexed id,
-        address indexed auditor,
-        bool isValid
-    );
-    event VerificationFinalized(
-        bytes32 indexed identifier,
-        uint64 indexed id,
-        bool consensus
-    );
+    event AuditorRegistered(address indexed auditor, string name, uint256 stakedTokens);
+    event VerificationSubmitted(bytes32 indexed identifier, uint64 indexed id, address indexed auditor, bool isValid);
+    event VerificationFinalized(bytes32 indexed identifier, uint64 indexed id, bool consensus);
     event AuditorSlashed(address indexed auditor, uint256 amount);
 
     uint256 private constant MIN_STAKE = 1 * 1e18; // 1$
@@ -97,13 +82,7 @@ contract AuditorRegistry {
             }
         }
 
-        v.push(
-            Verification({
-                auditor: msg.sender,
-                isValid: isValid,
-                timestamp: block.timestamp
-            })
-        );
+        v.push(Verification({auditor: msg.sender, isValid: isValid, timestamp: block.timestamp}));
 
         emit VerificationSubmitted(identifier, id, msg.sender, isValid);
 
@@ -113,10 +92,7 @@ contract AuditorRegistry {
         }
     }
 
-    function calculateConsensus(
-        bytes32 identifier,
-        uint64 id
-    ) internal view returns (bool) {
+    function calculateConsensus(bytes32 identifier, uint64 id) internal view returns (bool) {
         uint256 validVotes = 0;
         uint256 invalidVotes = 0;
 
@@ -136,11 +112,7 @@ contract AuditorRegistry {
         return validVotes > invalidVotes;
     }
 
-    function finalizeVerification(
-        bytes32 identifier,
-        uint64 id,
-        bool consensus
-    ) internal {
+    function finalizeVerification(bytes32 identifier, uint64 id, bool consensus) internal {
         Verification[] storage v = verifications[identifier][id];
 
         uint256 i = 0;
@@ -167,16 +139,11 @@ contract AuditorRegistry {
         emit AuditorSlashed(auditor, amount);
     }
 
-    function getAuditor(
-        address auditor
-    ) external view returns (Auditor memory) {
+    function getAuditor(address auditor) external view returns (Auditor memory) {
         return auditors[auditor];
     }
 
-    function getVerifications(
-        bytes32 identifier,
-        uint64 id
-    ) external view returns (Verification[] memory) {
+    function getVerifications(bytes32 identifier, uint64 id) external view returns (Verification[] memory) {
         return verifications[identifier][id];
     }
 }

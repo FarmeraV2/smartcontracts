@@ -23,18 +23,14 @@ contract AuditorHelper is Script {
 
     constructor() {
         chainIdToConfig[SEPOLIA_CHAIN_ID] = getEthUsdSepoliaConfig();
-        chainIdToConfig[
-            ZKSYNC_SEPOLIA_CHAIN_ID
-        ] = getEthUsdZksyncSepoliaConfig();
+        chainIdToConfig[ZKSYNC_SEPOLIA_CHAIN_ID] = getEthUsdZksyncSepoliaConfig();
     }
 
     function getConfig() public returns (Config memory) {
         return getConfigByChainId(block.chainid);
     }
 
-    function getConfigByChainId(
-        uint256 chainId
-    ) public returns (Config memory) {
+    function getConfigByChainId(uint256 chainId) public returns (Config memory) {
         if (chainIdToConfig[chainId].priceFeed != address(0)) {
             return chainIdToConfig[chainId];
         } else if (block.chainid == ANVIL_CHAIN_ID) {
@@ -47,11 +43,7 @@ contract AuditorHelper is Script {
         return Config({priceFeed: 0x694AA1769357215DE4FAC081bf1f309aDC325306});
     }
 
-    function getEthUsdZksyncSepoliaConfig()
-        internal
-        pure
-        returns (Config memory)
-    {
+    function getEthUsdZksyncSepoliaConfig() internal pure returns (Config memory) {
         return Config({priceFeed: 0xfEefF7c3fB57d18C5C6Cdd71e45D2D0b4F9377bF});
     }
 
