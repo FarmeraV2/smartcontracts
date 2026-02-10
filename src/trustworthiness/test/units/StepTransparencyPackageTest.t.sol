@@ -2,7 +2,7 @@
 pragma solidity ^0.8.30;
 
 import {Test} from "forge-std/Test.sol";
-import {StepTransparencyPackage} from "../../src/packages/StepTransparencyPackage.sol";
+import {StepTransparencyPackage} from "../../packages/StepTransparencyPackage.sol";
 
 contract StepTransparencyPackageTest is Test {
     StepTransparencyPackage pkg;
