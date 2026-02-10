@@ -2,7 +2,9 @@
 pragma solidity ^0.8.30;
 
 import {Test} from "forge-std/Test.sol";
-import {LogDefaultTrustPackage} from "../../src/trustworthiness/packages/LogDefaultTrustPackage.sol";
+import {
+    LogDefaultTrustPackage
+} from "../../src/trustworthiness/packages/LogDefaultTrustPackage.sol";
 
 contract LogDefaultTrustPackageTest is Test {
     LogDefaultTrustPackage pkg;
@@ -31,8 +33,14 @@ contract LogDefaultTrustPackageTest is Test {
             imageVerified: true,
             imageCount: 1,
             videoCount: 1,
-            logLocation: Location(10_000_000, 20_000_000),
-            plotLocation: Location(10_000_000, 20_000_000)
+            logLocation: Location({
+                latitude: 10_000_000,
+                longitude: 20_000_000
+            }),
+            plotLocation: Location({
+                latitude: 10_000_000,
+                longitude: 20_000_000
+            })
         });
         uint128 score = pkg.computeTrustScore(abi.encode(data));
         assertEq(score, 100);
@@ -44,8 +52,8 @@ contract LogDefaultTrustPackageTest is Test {
             imageVerified: false,
             imageCount: 0,
             videoCount: 0,
-            logLocation: Location(0, 0),
-            plotLocation: Location(1_000_000, 1_000_000)
+            logLocation: Location({latitude: 0, longitude: 0}),
+            plotLocation: Location({latitude: 1_000_000, longitude: 1_000_000})
         });
         uint128 score = pkg.computeTrustScore(abi.encode(data));
         assertEq(score, 0);
@@ -57,8 +65,8 @@ contract LogDefaultTrustPackageTest is Test {
             imageVerified: false,
             imageCount: 0,
             videoCount: 0,
-            logLocation: Location(0, 0),
-            plotLocation: Location(1_000_000, 1_000_000)
+            logLocation: Location({latitude: 0, longitude: 0}),
+            plotLocation: Location({latitude: 1_000_000, longitude: 1_000_000})
         });
         uint128 score = pkg.computeTrustScore(abi.encode(data));
         // Only provenance contributes: weight=20
@@ -71,8 +79,14 @@ contract LogDefaultTrustPackageTest is Test {
             imageVerified: false,
             imageCount: 0,
             videoCount: 0,
-            logLocation: Location(10_000_000, 20_000_000),
-            plotLocation: Location(10_000_100, 20_000_100)
+            logLocation: Location({
+                latitude: 10_000_000,
+                longitude: 20_000_000
+            }),
+            plotLocation: Location({
+                latitude: 10_000_000,
+                longitude: 20_000_000
+            })
         });
         uint128 score = pkg.computeTrustScore(abi.encode(data));
         assertGt(score, 0);
@@ -85,7 +99,7 @@ contract LogDefaultTrustPackageTest is Test {
             imageCount: 1,
             videoCount: 0,
             logLocation: Location(0, 0),
-            plotLocation: Location(1_000_000, 1_000_000)
+            plotLocation: Location({latitude: 1_000_000, longitude: 1_000_000})
         });
         uint128 score = pkg.computeTrustScore(abi.encode(data));
         // (1*1 + 1*0) / (1+1) = 0 due to integer division, so Tec = 0
