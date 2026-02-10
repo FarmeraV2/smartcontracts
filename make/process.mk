@@ -1,3 +1,5 @@
+-include .env
+
 process-deploy-sepolia:
 	forge script script/DeployProcessTracking.s.sol --rpc-url $(SEPOLIA_RPC_URL) --private-key $(WALLET_PRIVATE_KEY) --broadcast --etherscan-api-key $(SEPOLIA_API_KEY) --verify
 
