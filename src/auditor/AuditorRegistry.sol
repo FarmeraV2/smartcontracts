@@ -22,6 +22,7 @@ contract AuditorRegistry is VRFConsumerBaseV2Plus {
     error AuditorRegistry__NotEnoughAuditor();
     error AuditorRegistry__AlreadyRegistered(address);
     error AuditorRegistry__AlreadyVerified(address);
+    error AuditorRegistry__VerificationPending(bytes32, uint64);
     error AuditorRegistry__NotAssigned(address);
     error AuditorRegistry__DeadlineExpired(bytes32, uint64);
     error AuditorRegistry__VerificationNotExpired(bytes32, uint64);
@@ -50,16 +51,15 @@ contract AuditorRegistry is VRFConsumerBaseV2Plus {
 
     uint256 private constant MIN_STAKE = 1 * 1e18; // 1$
     uint256 private constant INITIAL_REPUTATION = 50;
-    uint256 private constant MIN_AUDITORS = 5;
     uint256 private constant REPUTATION_PENALTY = 5;
     uint256 private constant REPUTATION = 2;
     uint256 private constant SLASH_AMOUNT = 0.1 ether;
     uint16 private constant REQUEST_CONFIRMATIONS = 3;
-
     AggregatorV3Interface private priceFeed;
     uint256 private immutable SUBSCRIPTION_ID;
     bytes32 private immutable KEY_HASH;
     uint32 private immutable CALLBACK_GAS_LIMIT;
+    uint256 public constant MIN_AUDITORS = 5;
 
     uint256 counter = 0;
     mapping(address => Auditor) private auditors;
@@ -67,6 +67,7 @@ contract AuditorRegistry is VRFConsumerBaseV2Plus {
     address[] private auditorAddresses;
 
     mapping(bytes32 => mapping(uint64 => Verification[])) private verifications;
+    mapping(bytes32 => mapping(uint64 => bool)) public verificationResult;
     mapping(bytes32 => mapping(uint64 => mapping(address => bool)))
         private assignedAuditors;
     mapping(bytes32 => mapping(uint64 => address[])) private assignments;
@@ -90,7 +91,8 @@ contract AuditorRegistry is VRFConsumerBaseV2Plus {
     event VerificationFinalized(
         bytes32 indexed identifier,
         uint64 indexed id,
-        bool consensus
+        bool consensus,
+        uint256 totalVote
     );
     event VerificationRequested(
         bytes32 indexed identifier,
@@ -170,6 +172,9 @@ contract AuditorRegistry is VRFConsumerBaseV2Plus {
         uint256[] calldata randomWords
     ) internal override {
         VerificationRequest memory req = requests[requestId];
+        if (verificationDeadlines[req.identifier][req.id] != 0) {
+            revert AuditorRegistry__VerificationPending(req.identifier, req.id);
+        }
 
         uint256 randomSeed = randomWords[0];
 
@@ -299,12 +304,14 @@ contract AuditorRegistry is VRFConsumerBaseV2Plus {
         bool consensus
     ) internal {
         finalized[identifier][id] = true;
+        verificationResult[identifier][id] = consensus;
 
         Verification[] storage v = verifications[identifier][id];
 
         uint256 i = 0;
+        uint256 len = v.length;
 
-        for (i; i < v.length; i++) {
+        for (i; i < len; i++) {
             if (v[i].isValid == consensus) {
                 auditors[v[i].auditor].reputationScore += REPUTATION;
             } else {
@@ -312,7 +319,7 @@ contract AuditorRegistry is VRFConsumerBaseV2Plus {
             }
         }
 
-        emit VerificationFinalized(identifier, id, consensus);
+        emit VerificationFinalized(identifier, id, consensus, len);
     }
 
     function slashAuditor(address auditor, uint256 amount) internal {
@@ -321,6 +328,7 @@ contract AuditorRegistry is VRFConsumerBaseV2Plus {
 
         if (auditors[auditor].stakedTokens.convert(priceFeed) < MIN_STAKE) {
             auditors[auditor].isActive = false;
+            deactivateAuditor(auditor);
         }
 
         emit AuditorSlashed(auditor, amount);
@@ -351,6 +359,13 @@ contract AuditorRegistry is VRFConsumerBaseV2Plus {
         uint64 id
     ) external view returns (Verification[] memory) {
         return verifications[identifier][id];
+    }
+
+    function getVerificationResult(
+        bytes32 identifier,
+        uint64 id
+    ) external view returns (bool) {
+        return verificationResult[identifier][id];
     }
 
     function deactivateAuditor(address auditor) internal {

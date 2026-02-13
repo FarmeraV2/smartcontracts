@@ -7,14 +7,20 @@ contract ProcessTracking {
     error ProcessTracking__InvalidStepId(uint64);
 
     mapping(uint64 logId => string hashedData) private s_logs;
+    mapping(uint64 logId => string hashedData) private s_temp_logs;
     mapping(uint64 seasonStepId => uint64[] logIds) private s_seasonStepLogs;
     mapping(uint64 seasonStepId => string hashedData) private s_seasonStep;
     mapping(uint64 seasonId => uint64[] seasonStepIds) private s_season;
 
     event LogAdded(uint64 logId, string hashedData);
+    event TempLogAdded(uint64 logId, string hashedData);
     event StepAdded(uint64 seasonId, uint64 seasonStepId, string hashedData);
 
-    function addLog(uint64 seasonStepId, uint64 logId, string memory hashedData) public {
+    function addLog(
+        uint64 seasonStepId,
+        uint64 logId,
+        string memory hashedData
+    ) public {
         if (bytes(s_logs[logId]).length != 0) {
             revert ProcessTracking__InvalidLogId(logId);
         }
@@ -25,7 +31,21 @@ contract ProcessTracking {
         emit LogAdded(logId, hashedData);
     }
 
-    function addStep(uint64 seasonId, uint64 seasonStepId, string memory hashedData) public {
+    function addTempLog(uint64 logId, string memory hashedData) public {
+        if (bytes(s_temp_logs[logId]).length != 0) {
+            revert ProcessTracking__InvalidLogId(logId);
+        }
+
+        s_temp_logs[logId] = hashedData;
+
+        emit TempLogAdded(logId, hashedData);
+    }
+
+    function addStep(
+        uint64 seasonId,
+        uint64 seasonStepId,
+        string memory hashedData
+    ) public {
         if (bytes(s_seasonStep[seasonStepId]).length != 0) {
             revert ProcessTracking__InvalidStepId(seasonStepId);
         }
@@ -40,7 +60,13 @@ contract ProcessTracking {
         return s_logs[logId];
     }
 
-    function getLogs(uint64 seasonStepId) public view returns (uint64[] memory, string[] memory) {
+    function getTempLog(uint64 logId) public view returns (string memory) {
+        return s_temp_logs[logId];
+    }
+
+    function getLogs(
+        uint64 seasonStepId
+    ) public view returns (uint64[] memory, string[] memory) {
         uint64[] memory logIds = s_seasonStepLogs[seasonStepId];
         string[] memory data = new string[](logIds.length);
         uint32 i = 0;
@@ -54,7 +80,9 @@ contract ProcessTracking {
         return s_seasonStep[seasonStepId];
     }
 
-    function getSteps(uint64 seasonId) public view returns (uint64[] memory, string[] memory) {
+    function getSteps(
+        uint64 seasonId
+    ) public view returns (uint64[] memory, string[] memory) {
         uint64[] memory stepIds = s_season[seasonId];
         string[] memory data = new string[](stepIds.length);
         uint32 i = 0;

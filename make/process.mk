@@ -1,6 +1,6 @@
 -include .env
 
-PROCESS_DEPLOYED_ADDRESS = 0x5FbDB2315678afecb367f032d93F642f64180aa3
+PROCESS_DEPLOYED_ADDRESS = 0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9
 
 process-deploy-sepolia:
 	forge script script/DeployProcessTracking.s.sol --rpc-url $(SEPOLIA_RPC_URL) --private-key $(WALLET_PRIVATE_KEY) --broadcast --etherscan-api-key $(SEPOLIA_API_KEY) --verify
