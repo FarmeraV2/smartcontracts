@@ -19,12 +19,7 @@ contract TrustComputation {
 
     mapping(bytes32 => mapping(uint64 => TrustRecord)) private s_trustRecords;
 
-    event TrustProcessed(
-        bytes32 indexed identifier,
-        uint64 indexed id,
-        bool accept,
-        uint128 trustScore
-    );
+    event TrustProcessed(bytes32 indexed identifier, uint64 indexed id, bool accept, uint128 trustScore);
 
     constructor(address metricSelectionAddress) {
         s_metricSelection = MetricSelection(metricSelectionAddress);
@@ -37,10 +32,7 @@ contract TrustComputation {
         string memory context,
         bytes calldata data
     ) external {
-        address trustPackageAddress = s_metricSelection.getTrustPackage(
-            dataType,
-            context
-        );
+        address trustPackageAddress = s_metricSelection.getTrustPackage(dataType, context);
         if (trustPackageAddress == address(0)) {
             revert TrustComputation__NoTrustPackage();
         }
@@ -53,30 +45,23 @@ contract TrustComputation {
             revert TrustComputation__InvalidData();
         }
 
-        (bool accept, uint128 score) = TrustPackage(trustPackageAddress)
-            .computeTrustScore(data);
+        (bool accept, uint128 score) = TrustPackage(trustPackageAddress).computeTrustScore(data);
 
-        s_trustRecords[identifier][id] = TrustRecord({
-            accept: accept,
-            trustScore: score,
-            timestamp: block.timestamp
-        });
+        s_trustRecords[identifier][id] = TrustRecord({accept: accept, trustScore: score, timestamp: block.timestamp});
 
         emit TrustProcessed(identifier, id, accept, score);
     }
 
-    function getTrustRecord(
-        bytes32 identifier,
-        uint64 id
-    ) external view returns (bytes32, uint64, TrustRecord memory) {
+    function getTrustRecord(bytes32 identifier, uint64 id) external view returns (bytes32, uint64, TrustRecord memory) {
         TrustRecord memory record = s_trustRecords[identifier][id];
         return (identifier, id, record);
     }
 
-    function getTrustRecords(
-        bytes32 identifier,
-        uint64[] calldata ids
-    ) external view returns (bytes32, uint64[] memory, TrustRecord[] memory) {
+    function getTrustRecords(bytes32 identifier, uint64[] calldata ids)
+        external
+        view
+        returns (bytes32, uint64[] memory, TrustRecord[] memory)
+    {
         uint256 length = ids.length;
         TrustRecord[] memory records = new TrustRecord[](length);
 

@@ -2,16 +2,10 @@
 
 pragma solidity >=0.8.30;
 
-import {
-    AggregatorV3Interface
-} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
+import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 import {PriceFeedConsumer} from "./PriceFeedConsumer.sol";
-import {
-    VRFConsumerBaseV2Plus
-} from "@chainlink/contracts/src/v0.8/vrf/dev/VRFConsumerBaseV2Plus.sol";
-import {
-    VRFV2PlusClient
-} from "@chainlink/contracts/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
+import {VRFConsumerBaseV2Plus} from "@chainlink/contracts/src/v0.8/vrf/dev/VRFConsumerBaseV2Plus.sol";
+import {VRFV2PlusClient} from "@chainlink/contracts/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
 
 contract AuditorRegistry is VRFConsumerBaseV2Plus {
     using PriceFeedConsumer for uint256;
@@ -68,37 +62,18 @@ contract AuditorRegistry is VRFConsumerBaseV2Plus {
 
     mapping(bytes32 => mapping(uint64 => Verification[])) private verifications;
     mapping(bytes32 => mapping(uint64 => bool)) public verificationResult;
-    mapping(bytes32 => mapping(uint64 => mapping(address => bool)))
-        private assignedAuditors;
+    mapping(bytes32 => mapping(uint64 => mapping(address => bool))) private assignedAuditors;
     mapping(bytes32 => mapping(uint64 => address[])) private assignments;
-    mapping(bytes32 => mapping(uint64 => uint256))
-        private verificationDeadlines;
+    mapping(bytes32 => mapping(uint64 => uint256)) private verificationDeadlines;
 
     mapping(bytes32 => mapping(uint64 => bool)) public finalized;
     mapping(uint256 => VerificationRequest) public requests;
 
-    event AuditorRegistered(
-        address indexed auditor,
-        string name,
-        uint256 stakedTokens
-    );
-    event VerificationSubmitted(
-        bytes32 indexed identifier,
-        uint64 indexed id,
-        address indexed auditor,
-        bool isValid
-    );
-    event VerificationFinalized(
-        bytes32 indexed identifier,
-        uint64 indexed id,
-        bool consensus,
-        uint256 totalVote
-    );
+    event AuditorRegistered(address indexed auditor, string name, uint256 stakedTokens);
+    event VerificationSubmitted(bytes32 indexed identifier, uint64 indexed id, address indexed auditor, bool isValid);
+    event VerificationFinalized(bytes32 indexed identifier, uint64 indexed id, bool consensus, uint256 totalVote);
     event VerificationRequested(
-        bytes32 indexed identifier,
-        uint64 indexed id,
-        address[] assignedAuditors,
-        uint256 deadline
+        bytes32 indexed identifier, uint64 indexed id, address[] assignedAuditors, uint256 deadline
     );
     event AuditorSlashed(address indexed auditor, uint256 amount);
 
@@ -137,11 +112,7 @@ contract AuditorRegistry is VRFConsumerBaseV2Plus {
         emit AuditorRegistered(msg.sender, name, msg.value);
     }
 
-    function requestVerification(
-        bytes32 identifier,
-        uint64 id,
-        uint256 deadline
-    ) external {
+    function requestVerification(bytes32 identifier, uint64 id, uint256 deadline) external {
         if (deadline <= block.timestamp) {
             revert AuditorRegistry__InvalidDeadline();
         }
@@ -155,22 +126,13 @@ contract AuditorRegistry is VRFConsumerBaseV2Plus {
                 requestConfirmations: REQUEST_CONFIRMATIONS,
                 callbackGasLimit: CALLBACK_GAS_LIMIT,
                 numWords: 2,
-                extraArgs: VRFV2PlusClient._argsToBytes(
-                    VRFV2PlusClient.ExtraArgsV1({nativePayment: false})
-                )
+                extraArgs: VRFV2PlusClient._argsToBytes(VRFV2PlusClient.ExtraArgsV1({nativePayment: false}))
             })
         );
-        requests[requestId] = VerificationRequest({
-            identifier: identifier,
-            id: id,
-            deadline: deadline
-        });
+        requests[requestId] = VerificationRequest({identifier: identifier, id: id, deadline: deadline});
     }
 
-    function fulfillRandomWords(
-        uint256 requestId,
-        uint256[] calldata randomWords
-    ) internal override {
+    function fulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) internal override {
         VerificationRequest memory req = requests[requestId];
         if (verificationDeadlines[req.identifier][req.id] != 0) {
             revert AuditorRegistry__VerificationPending(req.identifier, req.id);
@@ -184,8 +146,7 @@ contract AuditorRegistry is VRFConsumerBaseV2Plus {
         uint256 i = 0;
         uint256 n = auditorAddresses.length;
         for (i; i < MIN_AUDITORS; i++) {
-            uint256 j = i +
-                (uint256(keccak256(abi.encode(randomSeed, i))) % (n - i));
+            uint256 j = i + (uint256(keccak256(abi.encode(randomSeed, i))) % (n - i));
 
             (temp[i], temp[j]) = (temp[j], temp[i]);
         }
@@ -197,12 +158,7 @@ contract AuditorRegistry is VRFConsumerBaseV2Plus {
             assignedAuditors[req.identifier][req.id][selected] = true;
             assignments[req.identifier][req.id].push(selected);
         }
-        emit VerificationRequested(
-            req.identifier,
-            req.id,
-            assignedAddresses,
-            req.deadline
-        );
+        emit VerificationRequested(req.identifier, req.id, assignedAddresses, req.deadline);
     }
 
     function verify(bytes32 identifier, uint64 id, bool isValid) external {
@@ -232,13 +188,7 @@ contract AuditorRegistry is VRFConsumerBaseV2Plus {
             }
         }
 
-        v.push(
-            Verification({
-                auditor: msg.sender,
-                isValid: isValid,
-                timestamp: block.timestamp
-            })
-        );
+        v.push(Verification({auditor: msg.sender, isValid: isValid, timestamp: block.timestamp}));
 
         emit VerificationSubmitted(identifier, id, msg.sender, isValid);
 
@@ -275,10 +225,7 @@ contract AuditorRegistry is VRFConsumerBaseV2Plus {
         finalizeVerification(identifier, id, consensus);
     }
 
-    function calculateConsensus(
-        bytes32 identifier,
-        uint64 id
-    ) internal view returns (bool) {
+    function calculateConsensus(bytes32 identifier, uint64 id) internal view returns (bool) {
         uint256 validVotes = 0;
         uint256 invalidVotes = 0;
 
@@ -298,11 +245,7 @@ contract AuditorRegistry is VRFConsumerBaseV2Plus {
         return validVotes > invalidVotes;
     }
 
-    function finalizeVerification(
-        bytes32 identifier,
-        uint64 id,
-        bool consensus
-    ) internal {
+    function finalizeVerification(bytes32 identifier, uint64 id, bool consensus) internal {
         finalized[identifier][id] = true;
         verificationResult[identifier][id] = consensus;
 
@@ -334,37 +277,23 @@ contract AuditorRegistry is VRFConsumerBaseV2Plus {
         emit AuditorSlashed(auditor, amount);
     }
 
-    function getAuditor(
-        address auditor
-    ) external view returns (Auditor memory) {
+    function getAuditor(address auditor) external view returns (Auditor memory) {
         return auditors[auditor];
     }
 
-    function getVerificationDeadline(
-        bytes32 identifier,
-        uint64 id
-    ) external view returns (uint256) {
+    function getVerificationDeadline(bytes32 identifier, uint64 id) external view returns (uint256) {
         return verificationDeadlines[identifier][id];
     }
 
-    function getVerificationAssignments(
-        bytes32 identifier,
-        uint64 id
-    ) external view returns (address[] memory) {
+    function getVerificationAssignments(bytes32 identifier, uint64 id) external view returns (address[] memory) {
         return assignments[identifier][id];
     }
 
-    function getVerifications(
-        bytes32 identifier,
-        uint64 id
-    ) external view returns (Verification[] memory) {
+    function getVerifications(bytes32 identifier, uint64 id) external view returns (Verification[] memory) {
         return verifications[identifier][id];
     }
 
-    function getVerificationResult(
-        bytes32 identifier,
-        uint64 id
-    ) external view returns (bool) {
+    function getVerificationResult(bytes32 identifier, uint64 id) external view returns (bool) {
         return verificationResult[identifier][id];
     }
 

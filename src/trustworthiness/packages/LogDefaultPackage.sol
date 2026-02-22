@@ -26,38 +26,33 @@ contract LogDefaultPackage is TrustPackage {
         Location plotLocation;
     }
 
-    function computeTrustScore(
-        bytes calldata payload
-    ) external pure returns (bool, uint128) {
+    function computeTrustScore(bytes calldata payload) external pure returns (bool, uint128) {
         LogData memory logData = abi.decode(payload, (LogData));
 
-        // spatial plausibility
+        // Tsp — Spatial Plausibility [0 or 100]
+        // Binary threshold: GPS proximity to registered plot.
         uint128 Tsp = 0;
         uint128 dist = _distance(logData.plotLocation, logData.logLocation);
         if (dist <= MAX_DISTANCE) {
-            Tsp = ((MAX_DISTANCE - dist) * SCALE) / MAX_DISTANCE;
+            Tsp = SCALE;
         }
 
-        // evidence completeness
+        // Tec — Evidence Completeness [0, 50, or 100]
+        // Tec = min((imageCount + videoCount) / (MAX_IMAGE + MAX_VIDEO), 1) × 100
+        // Wang & Strong (1996): Completeness (Contextual DQ).
+        // Pipino et al. (2002): capped ratio metric.
         uint128 Tec = _min(
-            (MAX_IMAGE_COUNT *
-                logData.imageCount +
-                MAX_VIDEO_COUNT *
-                logData.videoCount) / (MAX_IMAGE_COUNT + MAX_VIDEO_COUNT),
-            1
-        ) * SCALE;
+            ((MAX_IMAGE_COUNT * logData.imageCount + MAX_VIDEO_COUNT * logData.videoCount) * SCALE)
+                / (MAX_IMAGE_COUNT + MAX_VIDEO_COUNT),
+            SCALE
+        );
 
-        uint128 score = (WEIGHT_SPATIAL_PLAUSIBILITY *
-            Tsp +
-            WEIGHT_EVIDENCE_COMPLETENESS *
-            Tec) / SCALE;
+        uint128 score = (WEIGHT_SPATIAL_PLAUSIBILITY * Tsp + WEIGHT_EVIDENCE_COMPLETENESS * Tec) / SCALE;
+
         return (score >= ACCEPT_SCORE, score);
     }
 
-    function _distance(
-        Location memory a,
-        Location memory b
-    ) internal pure returns (uint128) {
+    function _distance(Location memory a, Location memory b) internal pure returns (uint128) {
         int128 latDiff = a.latitude - b.latitude;
         int128 lngDiff = a.longitude - b.longitude;
         return uint128(latDiff * latDiff + lngDiff * lngDiff);

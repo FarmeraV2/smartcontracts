@@ -10,10 +10,10 @@ contract LogAuditorPackage is TrustPackage {
     uint128 constant MAX_DISTANCE = 100_000; // ~100 meters in 1e6 scaled lat/lng
     uint128 constant MAX_IMAGE_COUNT = 1;
     uint128 constant MAX_VIDEO_COUNT = 1;
-    uint128 constant WEIGHT_CONSENSUS = 40;
-    uint128 constant WEIGHT_CONSENSUS_STRENGTH = 15;
-    uint128 constant WEIGHT_SPATIAL = 25;
-    uint128 constant WEIGHT_EVIDENCE = 20;
+
+    uint128 constant WEIGHT_CONSENSUS = 55;
+    uint128 constant WEIGHT_SPATIAL = 30;
+    uint128 constant WEIGHT_EVIDENCE = 15;
     uint128 constant ACCEPT_SCORE = 70;
 
     struct Location {
@@ -24,8 +24,6 @@ contract LogAuditorPackage is TrustPackage {
     struct LogAuditorData {
         bytes32 identifier;
         uint64 id;
-        uint128 auditorCount; // number of auditors who voted
-        uint128 minAuditors; // minimum required auditors
         uint128 imageCount;
         uint128 videoCount;
         Location logLocation;
@@ -38,50 +36,48 @@ contract LogAuditorPackage is TrustPackage {
         s_auditorRegistry = AuditorRegistry(auditorRegistry);
     }
 
-    function computeTrustScore(
-        bytes calldata payload
-    ) external view returns (bool, uint128) {
+    function computeTrustScore(bytes calldata payload) external view returns (bool, uint128) {
         LogAuditorData memory data = abi.decode(payload, (LogAuditorData));
 
-        bool verificationResult = s_auditorRegistry.getVerificationResult(
-            data.identifier,
-            data.id
-        );
+        // Tc — Reputation-weighted vote ratio [0, 100]
+        // Models the posterior mean of Beta(α, β) where:
+        //   α = Σ reputationScore_i  for votes isValid = true
+        //   β = Σ reputationScore_i  for votes isValid = false
+        // Tc = α / (α + β) × 100
+        // Jøsang & Ismail (2002): Beta Reputation System.
+        AuditorRegistry.Verification[] memory verifications =
+            s_auditorRegistry.getVerifications(data.identifier, data.id);
 
-        // Consensus score: the reputation-weighted vote outcome
-        uint128 Tc = (verificationResult ? 1 : 0) * SCALE;
+        uint256 alpha = 0;
+        uint256 beta_ = 0;
+        for (uint256 i = 0; i < verifications.length; i++) {
+            uint256 rep = s_auditorRegistry.getAuditor(verifications[i].auditor).reputationScore;
+            if (verifications[i].isValid) {
+                alpha += rep;
+            } else {
+                beta_ += rep;
+            }
+        }
+        uint128 Tc = (alpha + beta_) > 0 ? uint128((alpha * SCALE) / (alpha + beta_)) : 0;
 
-        // Consensus strength: how many auditors participated relative to minimum
-        uint128 Tcs = _min(
-            (data.auditorCount * SCALE) / _max(data.minAuditors, 1),
+        // Tsp — Spatial Plausibility [0 or 100]
+        uint128 Tsp = 0;
+        uint128 dist = _distance(data.plotLocation, data.logLocation);
+        if (dist <= MAX_DISTANCE * MAX_DISTANCE) {
+            Tsp = SCALE;
+        }
+
+        // Te — Evidence Completeness [0, 50, or 100]
+        // Te = min((imageCount + videoCount) / (MAX_IMAGE + MAX_VIDEO), 1) × 100
+        // Wang & Strong (1996): Completeness (Contextual DQ).
+        // Pipino et al. (2002): capped ratio metric.
+        uint128 Te = _min(
+            ((MAX_IMAGE_COUNT * data.imageCount + MAX_VIDEO_COUNT * data.videoCount) * SCALE)
+                / _max(MAX_IMAGE_COUNT + MAX_VIDEO_COUNT, 1),
             SCALE
         );
 
-        // Spatial plausibility: distance-based score
-        uint128 Tsp = 0;
-        uint128 dist = _distance(data.plotLocation, data.logLocation);
-        if (dist <= MAX_DISTANCE) {
-            Tsp = ((MAX_DISTANCE - dist) * SCALE) / MAX_DISTANCE;
-        }
-
-        // Evidence completeness
-        uint128 Te = _min(
-            (MAX_IMAGE_COUNT *
-                data.imageCount +
-                MAX_VIDEO_COUNT *
-                data.videoCount) / _max((MAX_IMAGE_COUNT + MAX_VIDEO_COUNT), 1),
-            1
-        ) * SCALE;
-
-        // Weighted sum
-        uint128 score = (WEIGHT_CONSENSUS *
-            Tc +
-            WEIGHT_CONSENSUS_STRENGTH *
-            Tcs +
-            WEIGHT_SPATIAL *
-            Tsp +
-            WEIGHT_EVIDENCE *
-            Te) / SCALE;
+        uint128 score = (WEIGHT_CONSENSUS * Tc + WEIGHT_SPATIAL * Tsp + WEIGHT_EVIDENCE * Te) / SCALE;
 
         return (score >= ACCEPT_SCORE, score);
     }
@@ -94,10 +90,7 @@ contract LogAuditorPackage is TrustPackage {
         return a > b ? a : b;
     }
 
-    function _distance(
-        Location memory a,
-        Location memory b
-    ) internal pure returns (uint128) {
+    function _distance(Location memory a, Location memory b) internal pure returns (uint128) {
         int128 latDiff = a.latitude - b.latitude;
         int128 lngDiff = a.longitude - b.longitude;
         return uint128(latDiff * latDiff + lngDiff * lngDiff);

@@ -4,9 +4,7 @@ pragma solidity ^0.8.30;
 
 import {Script} from "forge-std/Script.sol";
 import {MockV3Aggregator} from "../test/mocks/MockV3Aggregator.sol";
-import {
-    VRFCoordinatorV2_5Mock
-} from "@chainlink/contracts/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol";
+import {VRFCoordinatorV2_5Mock} from "@chainlink/contracts/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol";
 import {LinkToken} from "../test/mocks/LinkToken.sol";
 
 abstract contract CodeConstants {
@@ -40,23 +38,18 @@ contract AuditorHelper is Script, CodeConstants {
 
     constructor() {
         chainIdToConfig[SEPOLIA_CHAIN_ID] = getEthUsdSepoliaConfig();
-        chainIdToConfig[
-            ZKSYNC_SEPOLIA_CHAIN_ID
-        ] = getEthUsdZksyncSepoliaConfig();
+        chainIdToConfig[ZKSYNC_SEPOLIA_CHAIN_ID] = getEthUsdZksyncSepoliaConfig();
     }
 
     function getConfig() public returns (Config memory) {
         return getConfigByChainId(block.chainid);
     }
 
-    function getConfigByChainId(
-        uint256 chainId
-    ) public returns (Config memory) {
+    function getConfigByChainId(uint256 chainId) public returns (Config memory) {
         if (block.chainid == LOCAL_CHAIN_ID) {
             return getEthUsdAnvilConfig();
         } else if (
-            chainIdToConfig[chainId].priceFeed != address(0) &&
-            chainIdToConfig[chainId].vrfCoordinator != address(0)
+            chainIdToConfig[chainId].priceFeed != address(0) && chainIdToConfig[chainId].vrfCoordinator != address(0)
         ) {
             return chainIdToConfig[chainId];
         }
@@ -64,33 +57,27 @@ contract AuditorHelper is Script, CodeConstants {
     }
 
     function getEthUsdSepoliaConfig() internal pure returns (Config memory) {
-        return
-            Config({
-                priceFeed: 0x694AA1769357215DE4FAC081bf1f309aDC325306,
-                vrfCoordinator: 0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B,
-                keyHash: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae,
-                subscriptionId: 91196182292027717425112876604769057119028399381164107089771487227056836632618,
-                callbackGasLimit: 100000,
-                link: 0x779877A7B0D9E8603169DdbD7836e478b4624789,
-                account: 0x7036A25578d030f719c0503a4Ccab1609E425B34
-            });
+        return Config({
+            priceFeed: 0x694AA1769357215DE4FAC081bf1f309aDC325306,
+            vrfCoordinator: 0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B,
+            keyHash: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae,
+            subscriptionId: 91196182292027717425112876604769057119028399381164107089771487227056836632618,
+            callbackGasLimit: 100000,
+            link: 0x779877A7B0D9E8603169DdbD7836e478b4624789,
+            account: 0x7036A25578d030f719c0503a4Ccab1609E425B34
+        });
     }
 
-    function getEthUsdZksyncSepoliaConfig()
-        internal
-        pure
-        returns (Config memory)
-    {
-        return
-            Config({
-                priceFeed: 0xfEefF7c3fB57d18C5C6Cdd71e45D2D0b4F9377bF,
-                vrfCoordinator: 0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B,
-                keyHash: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae,
-                subscriptionId: 91196182292027717425112876604769057119028399381164107089771487227056836632618,
-                callbackGasLimit: 100000,
-                link: 0x779877A7B0D9E8603169DdbD7836e478b4624789,
-                account: 0x7036A25578d030f719c0503a4Ccab1609E425B34
-            });
+    function getEthUsdZksyncSepoliaConfig() internal pure returns (Config memory) {
+        return Config({
+            priceFeed: 0xfEefF7c3fB57d18C5C6Cdd71e45D2D0b4F9377bF,
+            vrfCoordinator: 0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B,
+            keyHash: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae,
+            subscriptionId: 91196182292027717425112876604769057119028399381164107089771487227056836632618,
+            callbackGasLimit: 100000,
+            link: 0x779877A7B0D9E8603169DdbD7836e478b4624789,
+            account: 0x7036A25578d030f719c0503a4Ccab1609E425B34
+        });
     }
 
     function getEthUsdAnvilConfig() public returns (Config memory) {
@@ -99,15 +86,9 @@ contract AuditorHelper is Script, CodeConstants {
         }
 
         vm.startBroadcast();
-        MockV3Aggregator mockV3Aggregator = new MockV3Aggregator(
-            DECIMALS,
-            INITIAL_PRICE
-        );
-        VRFCoordinatorV2_5Mock vrfCoordinatorV2_5Mock = new VRFCoordinatorV2_5Mock(
-                BASE_FEE,
-                GAS_PRICE,
-                WEI_PER_UNIT_LINK
-            );
+        MockV3Aggregator mockV3Aggregator = new MockV3Aggregator(DECIMALS, INITIAL_PRICE);
+        VRFCoordinatorV2_5Mock vrfCoordinatorV2_5Mock =
+            new VRFCoordinatorV2_5Mock(BASE_FEE, GAS_PRICE, WEI_PER_UNIT_LINK);
         LinkToken linkToken = new LinkToken();
         vm.stopBroadcast();
 

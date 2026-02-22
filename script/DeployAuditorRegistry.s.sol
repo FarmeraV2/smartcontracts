@@ -5,9 +5,7 @@ pragma solidity >=0.8.30;
 import {Script} from "forge-std/Script.sol";
 import {AuditorHelper, CodeConstants} from "./AuditorHelper.s.sol";
 import {AuditorRegistry} from "../src/auditor/AuditorRegistry.sol";
-import {
-    VRFCoordinatorV2_5Mock
-} from "@chainlink/contracts/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol";
+import {VRFCoordinatorV2_5Mock} from "@chainlink/contracts/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol";
 
 /**
  * @notice ***Helper contract that sets up VRF subscription and deploys AuditorRegistry
@@ -22,25 +20,13 @@ contract AuditorRegistryDeployer {
         bytes32 keyHash,
         uint32 callbackGasLimit
     ) external returns (AuditorRegistry, uint256) {
-        uint256 subId = VRFCoordinatorV2_5Mock(vrfCoordinator)
-            .createSubscription();
-        VRFCoordinatorV2_5Mock(vrfCoordinator).fundSubscription(
-            subId,
-            fundAmount
-        );
+        uint256 subId = VRFCoordinatorV2_5Mock(vrfCoordinator).createSubscription();
+        VRFCoordinatorV2_5Mock(vrfCoordinator).fundSubscription(subId, fundAmount);
 
-        AuditorRegistry auditorRegistry = new AuditorRegistry(
-            priceFeed,
-            vrfCoordinator,
-            keyHash,
-            subId,
-            callbackGasLimit
-        );
+        AuditorRegistry auditorRegistry =
+            new AuditorRegistry(priceFeed, vrfCoordinator, keyHash, subId, callbackGasLimit);
 
-        VRFCoordinatorV2_5Mock(vrfCoordinator).addConsumer(
-            subId,
-            address(auditorRegistry)
-        );
+        VRFCoordinatorV2_5Mock(vrfCoordinator).addConsumer(subId, address(auditorRegistry));
 
         return (auditorRegistry, subId);
     }
@@ -59,12 +45,8 @@ contract DeployAuditorRegistry is Script, CodeConstants {
             // caused by blockhash changing between simulation and broadcast
             vm.startBroadcast(config.account);
             AuditorRegistryDeployer deployer = new AuditorRegistryDeployer();
-            (AuditorRegistry anvilAuditorRegistry, ) = deployer.deploy(
-                config.vrfCoordinator,
-                FUND_AMOUNT,
-                config.priceFeed,
-                config.keyHash,
-                config.callbackGasLimit
+            (AuditorRegistry anvilAuditorRegistry,) = deployer.deploy(
+                config.vrfCoordinator, FUND_AMOUNT, config.priceFeed, config.keyHash, config.callbackGasLimit
             );
             vm.stopBroadcast();
             return (anvilAuditorRegistry, helper);
@@ -72,11 +54,7 @@ contract DeployAuditorRegistry is Script, CodeConstants {
 
         vm.startBroadcast(config.account);
         AuditorRegistry auditorRegistry = new AuditorRegistry(
-            config.priceFeed,
-            config.vrfCoordinator,
-            config.keyHash,
-            config.subscriptionId,
-            config.callbackGasLimit
+            config.priceFeed, config.vrfCoordinator, config.keyHash, config.subscriptionId, config.callbackGasLimit
         );
         vm.stopBroadcast();
 
