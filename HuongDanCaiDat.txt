@@ -1,0 +1,49 @@
+===========================================================
+  HƯỚNG DẪN CÀI ĐẶT - FARMERA SMART CONTRACTS
+===========================================================
+
+-----------------------------------------------------------
+I. CÀI ĐẶT FOUNDRY (forge, cast, anvil, chisel)
+-----------------------------------------------------------
+Tải script cài đặt Foundry
+  curl -L https://foundry.paradigm.xyz | bash
+
+Sau khi chạy xong, nạp lại môi trường shell
+  source ~/.bashrc   # hoặc source ~/.zshrc nếu dùng zsh
+
+Cài đặt phiên bản Foundry ổn định mới nhất
+  foundryup
+
+Kiểm tra cài đặt
+  forge --version
+  cast --version
+  anvil --version
+
+-----------------------------------------------------------
+II. CÀI ĐẶT MAKE
+-----------------------------------------------------------
+Dự án sử dụng Makefile để quản lý các lệnh build và deploy.
+
+Ubuntu / Debian
+  sudo apt-get update && sudo apt-get install -y make
+
+macOS (Homebrew)
+  brew install make
+
+Kiểm tra
+  make --version
+
+-----------------------------------------------------------
+III. CLONE VÀ CẤU HÌNH DỰ ÁN
+-----------------------------------------------------------
+1. Clone repository
+  git clone https://github.com/FarmeraV2/smartcontracts.git
+  cd farmera/smartcontracts
+
+2. Cài đặt các thư viện phụ thuộc (git submodules)
+  forge install
+
+3. Cấu hình biến môi trường
+  Sao chép file môi trường mẫu:
+    cp .env.sample .env    (hoặc tạo file .env mới)
+  Mở file .env và điền các giá trị thực tế:

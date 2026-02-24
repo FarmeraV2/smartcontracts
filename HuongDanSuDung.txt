@@ -1,0 +1,116 @@
+===========================================================
+  HƯỚNG DẪN SỬ DỤNG - FARMERA SMART CONTRACTS
+===========================================================
+
+-----------------------------------------------------------
+I. BIÊN DỊCH
+-----------------------------------------------------------
+Biên dịch toàn bộ smart contract
+  forge build
+  # hoặc
+  make build
+
+Kết quả biên dịch (ABI, bytecode) được lưu tại thư mục out/.
+
+-----------------------------------------------------------
+II. KHỞI ĐỘNG MẠNG CỤC BỘ (ANVIL)
+-----------------------------------------------------------
+Anvil là blockchain cục bộ tích hợp trong Foundry,
+dùng để phát triển và kiểm thử mà không tốn phí gas thật.
+
+Khởi động Anvil (mặc định tại http://127.0.0.1:8545)
+  anvil
+
+-----------------------------------------------------------
+III. TRIỂN KHAI HỢP ĐỒNG TRÊN ANVIL (MÔI TRƯỜNG CỤC BỘ)
+-----------------------------------------------------------
+
+1. Triển khai toàn bộ hệ thống (Interaction script)
+  make deploy-anvil
+
+2. Triển khai từng module riêng lẻ
+Module TrustComputation (tính toán độ tin cậy)
+  make trust-deploy-anvil
+
+Module ProcessTracking (theo dõi quy trình)
+  make process-deploy-anvil
+
+Module AuditorRegistry (đăng ký auditor)
+  make audit-deploy-anvil
+
+-----------------------------------------------------------
+IV. SỬ DỤNG
+-----------------------------------------------------------
+1. SỬ DỤNG MODULE PROCESS TRACKING
+Thêm log cho một quy trình
+  make process-add-log
+  # (mặc định: processId=1, logId=1, hash="hash_abc")
+
+Lấy log theo ID
+  make process-get-log
+
+Lấy toàn bộ danh sách log của quy trình
+  make process-get-logs
+
+Thêm bước (step) vào quy trình
+  make process-add-step
+
+Lấy bước theo ID
+  make process-get-step
+
+Lấy toàn bộ danh sách bước của quy trình
+  make process-get-steps
+
+-----------------------------------------------------------
+2. SỬ DỤNG MODULE TRUST COMPUTATION
+
+Lấy trust record
+  make trust-get-record
+
+Giải mã kết quả trust record
+  make trust-decode-record
+
+-----------------------------------------------------------
+3. SỬ DỤNG MODULE AUDITOR REGISTRY
+
+Khởi động nhanh: deploy + đăng ký 5 auditor mẫu
+  make audit-start-anvil
+
+Đăng ký một auditor
+  make audit-register-auditor
+
+Đăng ký nhiều auditor (Alex, Bob, Chloe, Doe, Jane)
+  make audit-register-auditors
+
+Lấy thông tin auditor
+  make audit-get-auditor
+
+Yêu cầu xác minh (verification request)
+  make audit-request
+
+Thực hiện VRF (chọn ngẫu nhiên auditor) – thủ công trên Anvil
+  make audit-fulfill-vrf
+
+Xem danh sách auditor được phân công
+  make audit-get-assignments
+
+Thực hiện xác minh (5 auditor bỏ phiếu)
+  make audit-verify
+
+Xem kết quả xác minh
+  make audit-get-verifications
+
+Kiểm tra trạng thái finalized
+  make audit-get-finalized
+
+Xem kết quả cuối cùng
+  make audit-get-finalized-result
+
+Finalize các request đã hết hạn
+  make audit-finalize-expired
+
+Xem sự kiện VerificationRequested
+  make audit-request-events
+
+Xem sự kiện VerificationFinalized
+  make audit-verification-finalized-events
