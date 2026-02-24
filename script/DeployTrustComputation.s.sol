@@ -2,11 +2,12 @@
 
 pragma solidity ^0.8.30;
 
-import {Script, console} from "forge-std/Script.sol";
+import {Script} from "forge-std/Script.sol";
 import {TrustComputation} from "../src/trustworthiness/TrustComputation.sol";
 import {MetricSelection} from "../src/trustworthiness/MetricSelection.sol";
-import {LogDefaultTrustPackage} from "../src/trustworthiness/packages/LogDefaultTrustPackage.sol";
-import {StepTransparencyPackage} from "../src/trustworthiness/packages/StepTransparencyPackage.sol";
+import {LogDefaultPackage} from "../src/trustworthiness/packages/LogDefaultPackage.sol";
+import {LogAuditorPackage} from "../src/trustworthiness/packages/LogAuditorPackage.sol";
+import {DeployAuditorRegistry} from "./DeployAuditorRegistry.s.sol";
 
 contract DeployTrustComputation is Script {
     function run() external returns (TrustComputation) {
@@ -14,15 +15,7 @@ contract DeployTrustComputation is Script {
 
         MetricSelection metricSelection = new MetricSelection();
 
-        LogDefaultTrustPackage logDefaultTP = new LogDefaultTrustPackage();
-        metricSelection.registerTrustPackage("log", "default", address(logDefaultTP));
-
-        StepTransparencyPackage stepTP = new StepTransparencyPackage();
-        metricSelection.registerTrustPackage("step", "default", address(stepTP));
-
         TrustComputation trustComputation = new TrustComputation(address(metricSelection));
-
-        console.log("TrustComputation deployed at:", address(trustComputation));
 
         vm.stopBroadcast();
         return trustComputation;

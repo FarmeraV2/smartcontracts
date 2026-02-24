@@ -7,11 +7,13 @@ contract ProcessTracking {
     error ProcessTracking__InvalidStepId(uint64);
 
     mapping(uint64 logId => string hashedData) private s_logs;
+    mapping(uint64 logId => string hashedData) private s_temp_logs;
     mapping(uint64 seasonStepId => uint64[] logIds) private s_seasonStepLogs;
     mapping(uint64 seasonStepId => string hashedData) private s_seasonStep;
     mapping(uint64 seasonId => uint64[] seasonStepIds) private s_season;
 
     event LogAdded(uint64 logId, string hashedData);
+    event TempLogAdded(uint64 logId, string hashedData);
     event StepAdded(uint64 seasonId, uint64 seasonStepId, string hashedData);
 
     function addLog(uint64 seasonStepId, uint64 logId, string memory hashedData) public {
@@ -23,6 +25,16 @@ contract ProcessTracking {
         s_seasonStepLogs[seasonStepId].push(logId);
 
         emit LogAdded(logId, hashedData);
+    }
+
+    function addTempLog(uint64 logId, string memory hashedData) public {
+        if (bytes(s_temp_logs[logId]).length != 0) {
+            revert ProcessTracking__InvalidLogId(logId);
+        }
+
+        s_temp_logs[logId] = hashedData;
+
+        emit TempLogAdded(logId, hashedData);
     }
 
     function addStep(uint64 seasonId, uint64 seasonStepId, string memory hashedData) public {
@@ -38,6 +50,10 @@ contract ProcessTracking {
 
     function getLog(uint64 logId) public view returns (string memory) {
         return s_logs[logId];
+    }
+
+    function getTempLog(uint64 logId) public view returns (string memory) {
+        return s_temp_logs[logId];
     }
 
     function getLogs(uint64 seasonStepId) public view returns (uint64[] memory, string[] memory) {
