@@ -38,7 +38,6 @@ contract AuditorHelper is Script, CodeConstants {
 
     constructor() {
         chainIdToConfig[SEPOLIA_CHAIN_ID] = getEthUsdSepoliaConfig();
-        chainIdToConfig[ZKSYNC_SEPOLIA_CHAIN_ID] = getEthUsdZksyncSepoliaConfig();
     }
 
     function getConfig() public returns (Config memory) {
@@ -61,19 +60,7 @@ contract AuditorHelper is Script, CodeConstants {
             priceFeed: 0x694AA1769357215DE4FAC081bf1f309aDC325306,
             vrfCoordinator: 0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B,
             keyHash: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae,
-            subscriptionId: 91196182292027717425112876604769057119028399381164107089771487227056836632618,
-            callbackGasLimit: 100000,
-            link: 0x779877A7B0D9E8603169DdbD7836e478b4624789,
-            account: 0x7036A25578d030f719c0503a4Ccab1609E425B34
-        });
-    }
-
-    function getEthUsdZksyncSepoliaConfig() internal pure returns (Config memory) {
-        return Config({
-            priceFeed: 0xfEefF7c3fB57d18C5C6Cdd71e45D2D0b4F9377bF,
-            vrfCoordinator: 0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B,
-            keyHash: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae,
-            subscriptionId: 91196182292027717425112876604769057119028399381164107089771487227056836632618,
+            subscriptionId: 48173827586891756093595132381979588514464786466822827527327829072365290294277,
             callbackGasLimit: 100000,
             link: 0x779877A7B0D9E8603169DdbD7836e478b4624789,
             account: 0x7036A25578d030f719c0503a4Ccab1609E425B34

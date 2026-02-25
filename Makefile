@@ -9,14 +9,5 @@ deploy-anvil:
 	cast rpc evm_mine --rpc-url $(RPC_URL) && \
 	forge script script/Interaction.s.sol --rpc-url $(RPC_URL) --private-key $(PRIVATE_KEY) --broadcast
 
-# deploy-sepolia:
-# 	$(MAKE) -f make/process.mk process-deploy-sepolia \
-# 	$(MAKE) -f make/trust.mk trust-deploy-sepolia
-
-# deploy-zksync-anvil:
-# 	$(MAKE) -f make/process.mk process-deploy-zksync-anvil \
-# 	$(MAKE) -f make/trust.mk trust-deploy-zksync-anvil
-
-# deploy-zksync-sepolia:
-# 	$(MAKE) -f make/process.mk process-deploy-zksync-sepolia \
-# 	$(MAKE) -f make/trust.mk trust-deploy-zksync-sepolia
+deploy-sepolia:
+	forge script script/Interaction.s.sol --rpc-url $(SEPOLIA_RPC_URL) --private-key $(WALLET_PRIVATE_KEY) --broadcast --etherscan-api-key $(SEPOLIA_API_KEY) --verify

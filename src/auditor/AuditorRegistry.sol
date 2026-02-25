@@ -53,7 +53,7 @@ contract AuditorRegistry is VRFConsumerBaseV2Plus {
     uint256 private immutable SUBSCRIPTION_ID;
     bytes32 private immutable KEY_HASH;
     uint32 private immutable CALLBACK_GAS_LIMIT;
-    uint256 public constant MIN_AUDITORS = 5;
+    uint256 public constant MIN_AUDITORS = 3;
 
     uint256 counter = 0;
     mapping(address => Auditor) private auditors;
