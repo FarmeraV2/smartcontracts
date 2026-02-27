@@ -76,6 +76,8 @@ contract AuditorRegistry is VRFConsumerBaseV2Plus {
         bytes32 indexed identifier, uint64 indexed id, address[] assignedAuditors, uint256 deadline
     );
     event AuditorSlashed(address indexed auditor, uint256 amount);
+    event RandomRequested(uint256 requestId);
+    event RandomResult(uint256[] result);
 
     constructor(
         address _priceFeedAddress,
@@ -119,44 +121,64 @@ contract AuditorRegistry is VRFConsumerBaseV2Plus {
         if (auditorAddresses.length < MIN_AUDITORS) {
             revert AuditorRegistry__NotEnoughAuditor();
         }
+        if (verificationDeadlines[identifier][id] != 0) {
+            revert AuditorRegistry__VerificationPending(identifier, id);
+        }
         uint256 requestId = s_vrfCoordinator.requestRandomWords(
             VRFV2PlusClient.RandomWordsRequest({
                 keyHash: KEY_HASH,
                 subId: SUBSCRIPTION_ID,
                 requestConfirmations: REQUEST_CONFIRMATIONS,
                 callbackGasLimit: CALLBACK_GAS_LIMIT,
-                numWords: 2,
+                numWords: 1,
                 extraArgs: VRFV2PlusClient._argsToBytes(VRFV2PlusClient.ExtraArgsV1({nativePayment: false}))
             })
         );
         requests[requestId] = VerificationRequest({identifier: identifier, id: id, deadline: deadline});
+        emit RandomRequested(requestId);
     }
 
     function fulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) internal override {
         VerificationRequest memory req = requests[requestId];
-        if (verificationDeadlines[req.identifier][req.id] != 0) {
-            revert AuditorRegistry__VerificationPending(req.identifier, req.id);
-        }
+        uint256 n = auditorAddresses.length;
+        uint256 seed = randomWords[0];
 
-        uint256 randomSeed = randomWords[0];
-
-        address[] memory temp = auditorAddresses;
         verificationDeadlines[req.identifier][req.id] = req.deadline;
 
-        uint256 i = 0;
-        uint256 n = auditorAddresses.length;
-        for (i; i < MIN_AUDITORS; i++) {
-            uint256 j = i + (uint256(keccak256(abi.encode(randomSeed, i))) % (n - i));
-
-            (temp[i], temp[j]) = (temp[j], temp[i]);
-        }
         address[] memory assignedAddresses = new address[](MIN_AUDITORS);
-        i = 0;
-        for (i; i < MIN_AUDITORS; i++) {
-            address selected = temp[i];
-            assignedAddresses[i] = selected;
-            assignedAuditors[req.identifier][req.id][selected] = true;
-            assignments[req.identifier][req.id].push(selected);
+
+        // Partial Fisher-Yates without full array copy.
+        // ovKey/ovVal tracks positions whose virtual value was swapped in a prior step.
+        // At most MIN_AUDITORS entries are ever written.
+        uint256[] memory ovKey = new uint256[](MIN_AUDITORS);
+        address[] memory ovVal = new address[](MIN_AUDITORS);
+        uint256 ovLen = 0;
+
+        for (uint256 i = 0; i < MIN_AUDITORS; i++) {
+            uint256 j = i + (uint256(keccak256(abi.encode(seed, i))) % (n - i));
+
+            // Resolve virtual address at j and i
+            address addrJ = auditorAddresses[j];
+            address addrI = auditorAddresses[i];
+            for (uint256 k = 0; k < ovLen; k++) {
+                if (ovKey[k] == j) addrJ = ovVal[k];
+                if (ovKey[k] == i) addrI = ovVal[k];
+            }
+
+            // Back-fill virtual position j with what was at i
+            bool updated = false;
+            for (uint256 k = 0; k < ovLen; k++) {
+                if (ovKey[k] == j) ovVal[k] = addrI;
+                updated = true;
+                break;
+            }
+            if (!updated) ovKey[ovLen] = j;
+            ovVal[ovLen] = addrI;
+            ovLen++;
+
+            assignedAddresses[i] = addrJ;
+            assignedAuditors[req.identifier][req.id][addrJ] = true;
+            assignments[req.identifier][req.id].push(addrJ);
         }
         emit VerificationRequested(req.identifier, req.id, assignedAddresses, req.deadline);
     }

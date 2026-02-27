@@ -13,7 +13,7 @@ WALLET_ADDRESS = 0xa0Ee7A142d267C1f36714E4a8F75612F20a79720
 AUDIT_VERIFICATION_REQUESTED_HASH := $(shell cast keccak "VerificationRequested(bytes32,uint256,address[],uint256)")
 
 audit-deploy-sepolia:
-	forge script script/DeployAuditorRegistry.s.sol --rpc-url $(SEPOLIA_RPC_URL) --private-key $(WALLET_PRIVATE_KEY) --broadcast --etherscan-api-key $(SEPOLIA_API_KEY) --verify
+	forge script script/DeployAuditorRegistry.s.sol --tc DeployAuditorRegistry --rpc-url $(SEPOLIA_RPC_URL) --private-key $(WALLET_PRIVATE_KEY) --broadcast --etherscan-api-key $(SEPOLIA_API_KEY) --verify
 
 audit-deploy-anvil:
 	cast rpc evm_mine && \
