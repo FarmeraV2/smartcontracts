@@ -67,7 +67,7 @@ audit-finalize-expired:
 	cast send $(AUDIT_DEPLOYED_ADDRESS) "finalizeExpired(bytes32,uint64)" $(BYTES32_IDENTIFIER) 1 --private-key $(PRIVATE_KEY) --rpc-url $(RPC_URL)
 
 audit-get-verifications:
-	cast call $(AUDIT_DEPLOYED_ADDRESS) "getVerifications(bytes32,uint64)((bool,address,uint256)[])" $(BYTES32_IDENTIFIER) 1 --rpc-url $(RPC_URL)
+	cast call $(AUDIT_DEPLOYED_ADDRESS) "getVerifications(bytes32,uint64)((bool,address,uint256)[])" $(BYTES32_IDENTIFIER) 93 --rpc-url $(RPC_URL)
 
 audit-get-finalized:
 	cast call $(AUDIT_DEPLOYED_ADDRESS) "finalized(bytes32,uint64)(bool)" $(BYTES32_IDENTIFIER) 1 --rpc-url $(RPC_URL)
